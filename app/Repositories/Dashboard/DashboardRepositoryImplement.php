@@ -24,6 +24,7 @@ class DashboardRepositoryImplement extends Eloquent implements DashboardReposito
     public function getNews()
     {
         $query = $this->model
+            ->where('hidden_flag', 0)
             ->orderBy('created_at', 'desc')
             ->paginate(5);
         if ($query == NULL) {
