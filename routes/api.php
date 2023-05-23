@@ -4,7 +4,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\DashboardController;
-
+use App\Http\Controllers\QuizController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -42,10 +42,22 @@ Route::prefix('v1')->group(function () {
             Route::post('/hide/{id}', [NewsController::class, 'hide']);
             Route::post('create_notification/{id}', [NewsController::class, 'createNotification']);
             Route::post('update_notification/{id}', [NewsController::class, 'updateNotification']);
+            Route::post('notification_now/{id}', [NewsController::class, 'notification']);
         });
+
+        Route::prefix('quiz')->group(function () {
+            Route::get('/index', [QuizController::class, 'index']);
+            Route::post('/create', [QuizController::class, 'create']);
+            Route::post('/update/{id}', [QuizController::class, 'update']);
+            Route::get('/detail/{id}', [QuizController::class, 'detail']);
+            Route::delete('/delete/{id}', [QuizController::class, 'delete']);
+            Route::post('/answer/{id}', [QuizController::class, 'answer']);
+        });
+
 
         Route::prefix('dashboard')->group(function () {
             Route::get('/news', [DashboardController::class, 'index']);
+            Route::get('/quiz', [DashboardController::class, 'indexQuiz']);
         });
     });
 });

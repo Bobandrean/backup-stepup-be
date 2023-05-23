@@ -57,6 +57,7 @@ class NewsRepositoryImplement extends Eloquent implements NewsRepository
             $input->slug = $request->slug;
             $input->short_content = $request->short_content;
             $input->hidden_flag = 0;
+            $input->image = "https://upload.wikimedia.org/wikipedia/commons/1/11/Test-Logo.svg";
             $input->save();
             $input->id;
 
@@ -109,6 +110,7 @@ class NewsRepositoryImplement extends Eloquent implements NewsRepository
             $query->content = $request->content;
             $query->slug = $request->slug;
             $query->short_content = $request->short_content;
+            $query->image = "https://upload.wikimedia.org/wikipedia/commons/1/11/Test-Logo.svg";
             $query->save();
 
             if ($request->has('files')) {
@@ -250,6 +252,17 @@ class NewsRepositoryImplement extends Eloquent implements NewsRepository
         $query->save();
 
         return BaseController::success($query, "Sukses mengubah data", 200);
+    }
+
+    public function notificationNow($id)
+    {
+        $query = News::find($id);
+        if (!$query) {
+            return BaseController::error(null, "Data tidak ditemukan", 404);
+        }
+
+
+        return BaseController::success($query, "Notifikasi Berhasil", 200);
     }
     // Write something awesome :)
 }

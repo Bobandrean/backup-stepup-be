@@ -56,6 +56,10 @@ class NewsController extends Controller
         return $this->NewsRepository->hideNews($id);
     }
 
+    public function notification($id)
+    {
+        return $this->NewsRepository->notificationNow($id);
+    }
     public function createNotification(CreateNotificationRequest $request, $id)
     {
         return $this->NewsRepository->createNotification($request, $id);
@@ -65,4 +69,5 @@ class NewsController extends Controller
     {
         return $this->NewsRepository->updateNotification($request, $id);
     }
+    
 }

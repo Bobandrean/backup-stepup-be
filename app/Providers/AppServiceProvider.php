@@ -9,6 +9,9 @@ use App\Repositories\News\NewsRepository;
 use App\Repositories\News\NewsRepositoryImplement;
 use App\Repositories\Dashboard\DashboardRepository;
 use App\Repositories\Dashboard\DashboardRepositoryImplement;
+use App\Repositories\Quiz\QuizRepository;
+use App\Repositories\Quiz\QuizRepositoryImplement;
+
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -34,6 +37,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             DashboardRepository::class,
             DashboardRepositoryImplement::class,
+        );
+
+        $this->app->bind(
+            QuizRepository::class,
+            QuizRepositoryImplement::class,
         );
         //
     }

@@ -5,6 +5,7 @@ namespace App\Repositories\Auth;
 use LaravelEasyRepository\Implementations\Eloquent;
 use App\Models\User;
 use App\Models\Role;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\BaseController;
 
@@ -26,17 +27,33 @@ class AuthRepositoryImplement extends Eloquent implements AuthRepository
 
     public function loginFunction($request)
     {
-        $credentials = $request->only('email', 'password');
+        $credentials = [
+            'email' => $request->input('email'),
+            'password' => $request->input('password')
+        ];
 
+        // Check if login is successful with email
         if (!Auth::attempt($credentials)) {
-            return BaseController::error(NULL, 'UnAuthorized', 400);
-        }
-        try {
-            $user = $this->model::where('email', $request->email)
+            // Attempt login with username
+            $user = $this->model::where('username', $request->input('email'))
                 ->where('active', '=', '1')
                 ->first();
+
+            if (!$user || !Hash::check($request->input('password'), $user->password)) {
+                return BaseController::error(NULL, 'UnAuthorized', 400);
+            }
+        }
+
+        try {
+            $user = $this->model::where(function ($query) use ($request) {
+                $query->where('email', $request->input('email'))
+                    ->orWhere('username', $request->input('email'));
+            })
+                ->where('active', '=', '1')
+                ->first();
+
             if ($user == NULL) {
-                return BaseController::error(NULL, 'User need to verification', 400);
+                return BaseController::error(NULL, 'User needs verification', 400);
             }
 
             $token = $user->createToken('auth_token')->plainTextToken;

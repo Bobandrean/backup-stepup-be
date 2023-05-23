@@ -17,4 +17,5 @@ interface NewsRepository extends Repository
     public function hideNews($id);
     public function createNotification($request, $id);
     public function updateNotification($request, $id);
+    public function notificationNow($id);
 }
