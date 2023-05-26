@@ -46,5 +46,10 @@ class QuizController extends Controller
     {
         return $this->QuizRepository->answerQuiz($request, $id);
     }
+
+    public function answerDetail($id)
+    {
+        return $this->QuizRepository->getAnswerById($id);
+    }
     //
 }

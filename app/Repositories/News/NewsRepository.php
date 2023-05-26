@@ -9,6 +9,7 @@ interface NewsRepository extends Repository
 
     // Write something awesome :)
     public function getAllNews();
+    public function getShowedNews();
     public function createNews($request);
     public function updateNews($request, $id);
     public function deleteNews($id);

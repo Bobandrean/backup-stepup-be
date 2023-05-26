@@ -33,6 +33,7 @@ Route::prefix('v1')->group(function () {
 
         Route::prefix('news')->group(function () {
             Route::get('/index', [NewsController::class, 'index']);
+            Route::get('/index/showed', [NewsController::class, 'indexShowed']);
             Route::post('/create', [NewsController::class, 'create']);
             Route::get('/detail/{id}', [NewsController::class, 'detail']);
             Route::post('/update/{id}', [NewsController::class, 'update']);
@@ -52,6 +53,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/detail/{id}', [QuizController::class, 'detail']);
             Route::delete('/delete/{id}', [QuizController::class, 'delete']);
             Route::post('/answer/{id}', [QuizController::class, 'answer']);
+            Route::get('/answer/detail/{id}', [QuizController::class, 'answerDetail']);
         });
 
 

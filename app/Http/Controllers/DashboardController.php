@@ -21,7 +21,7 @@ class DashboardController extends Controller
 
     public function index()
     {
-        return $this->NewsRepository->getAllNews();
+        return $this->NewsRepository->getShowedNews();
     }
 
     public function indexQuiz()

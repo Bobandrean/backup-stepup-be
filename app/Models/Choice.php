@@ -4,29 +4,25 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Question;
 
-class Quiz extends Model
+class Choice extends Model
 {
     use HasFactory;
 
-    protected $table = 'quiz';
+
+    protected $table = 'choice';
 
     protected $fillable = [
         'id',
-        'module_name',
-        'per_page',
-        'start_date',
-        'end_date',
-        'published_at',
-        'questions_id',
+        'question_id',
+        'choice',
+        'is_correct',
         'created_at',
         'updated_at',
-        'deleted_at'
     ];
 
     public function question()
     {
-        return $this->hasMany(Question::class);
+        return $this->belongsTo(Question::class);
     }
 }

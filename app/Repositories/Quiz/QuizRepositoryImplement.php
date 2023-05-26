@@ -5,10 +5,14 @@ namespace App\Repositories\Quiz;
 use LaravelEasyRepository\Implementations\Eloquent;
 use App\Http\Controllers\BaseController;
 use App\Models\Answer;
+use App\Models\AnswerChoice;
+use App\Models\AnswerQuestion;
+use App\Models\Question;
+use App\Models\Choice;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-
 use App\Models\Quiz;
+use Carbon\Carbon;
 use Faker\Provider\Base;
 
 class QuizRepositoryImplement extends Eloquent implements QuizRepository
@@ -28,29 +32,22 @@ class QuizRepositoryImplement extends Eloquent implements QuizRepository
 
     public function getAllQuiz()
     {
-        $query = $this->model->get();
+        $query = $this->model->with('question.choice')->get();
         if ($query == NULL) {
             return BaseController::error(NULL, 'Data not found', 400);
         }
 
-        $data = json_decode($query, true);
 
-
-        $result = [];
-
-        foreach ($data as $item) {
-            $question = json_decode($item['question'], true);
-            $item['question'] = $question;
-            $result[] = $item;
-        }
-
-        return BaseController::success($result, "Sukses mengambil data", 200);
+        return BaseController::success($query, "Sukses mengambil data", 200);
     }
 
     public function createQuiz($request)
     {
 
-        $question = json_encode($request->questions);
+
+
+        $questionsData = $request->questions;
+
 
         try {
             DB::beginTransaction();
@@ -60,10 +57,25 @@ class QuizRepositoryImplement extends Eloquent implements QuizRepository
             $input->per_page = $request->per_page;
             $input->start_date = $request->start_date;
             $input->end_date = $request->end_date;
-            $input->published_at = $request->published_at;
-            $input->question = $question;
-
+            $input->published_at = carbon::now();
             $input->save();
+            $input->id;
+
+            foreach ($questionsData as $key => $value) {
+                $question = new Question();
+                $question->quiz_id = $input->id;
+                $question->title = $value['title'];
+                $question->save();
+                $question->id;
+
+                foreach ($value['choices'] as $key2 => $value2) {
+                    $choice = new Choice();
+                    $choice->question_id = $question->id;
+                    $choice->choice_text = $value2['text'];
+                    $choice->is_correct = $value2['isCorrect'];
+                    $choice->save();
+                }
+            }
 
             DB::commit();
         } catch (\Throwable $th) {
@@ -76,28 +88,46 @@ class QuizRepositoryImplement extends Eloquent implements QuizRepository
 
     public function updateQuiz($request, $id)
     {
-        $question = json_encode($request->questions);
+        $query = $this->model->find($id);
 
-        try {
-            DB::beginTransaction();
-            $input = $this->model->find($id);
-
-            $input->module_name = $request->module_name;
-            $input->per_page = $request->per_page;
-            $input->start_date = $request->start_date;
-            $input->end_date = $request->end_date;
-            $input->published_at = $request->published_at;
-            $input->question = $question;
-
-            $input->save();
-
-            DB::commit();
-        } catch (\Throwable $th) {
-            DB::rollback();
-            throw $th;
+        if ($query == NULL) {
+            return BaseController::error(NULL, 'Data not found', 400);
         }
 
-        return BaseController::success($input, "Sukses mengubah data", 200);
+        $query->module_name = $request->module_name;
+        $query->per_page = $request->per_page;
+        $query->start_date = $request->start_date;
+        $query->end_date = $request->end_date;
+        $query->published_at = carbon::now();
+        $query->save();
+        $query->id;
+
+        $questionsData = $request->questions;
+
+        $find_question_id = Question::where('quiz_id', $query->id)->first();
+
+        $refresh_choice = Choice::where('question_id', $find_question_id->id)->delete();
+
+        $refresh_question = Question::where('quiz_id', $query->id)->delete();
+
+
+        foreach ($questionsData as $key => $value) {
+            $question = new Question();
+            $question->quiz_id = $query->id;
+            $question->title = $value['title'];
+            $question->save();
+            $question->id;
+
+            foreach ($value['choices'] as $key2 => $value2) {
+                $choice = new Choice();
+                $choice->question_id = $question->id;
+                $choice->choice_text = $value2['text'];
+                $choice->is_correct = $value2['isCorrect'];
+                $choice->save();
+            }
+        }
+
+        return BaseController::success(NULL, "Sukses mengubah data", 200);
     }
     public function deleteQuiz($id)
     {
@@ -113,55 +143,95 @@ class QuizRepositoryImplement extends Eloquent implements QuizRepository
 
     public function getQuizById($id)
     {
-        $query = $this->model->find($id);
+        $query = $this->model->with('question.choice')->find($id);
+
         if ($query == NULL) {
             return BaseController::error(NULL, 'Data not found', 400);
         }
 
-        $data = json_decode($query, true);
-
-        $question = json_decode($data['question'], true);
-        $data['question'] = $question;
-
-        return BaseController::success($data, "Sukses mengambil data", 200);
+        return BaseController::success($query, "Sukses mengambil data", 200);
     }
 
+    public function getAnswerById($id)
+    {
+        $query = Answer::with('quiz', 'user', 'answerQuestion.answerChoice')->where('quiz_id', $id)->get();
+
+        if ($query == NULL) {
+            return BaseController::error(NULL, 'Data not found', 400);
+        }
+
+        return BaseController::success($query, "Sukses mengambil data", 200);
+    }
 
     public function answerQuiz($request, $id)
     {
         $userId = Auth::user()->id;
         $data = $request;
+        $total_question = 0;
         $count = 0;
         $sum = 0;
 
-        foreach ($data['answer'] as $item) {
-            $count += 1;
-            foreach ($item['choices'] as $choice) {
-                $sum += $choice['isCorrect'];
-            }
+
+
+        $query = Answer::with('quiz', 'user', 'answerQuestion.answerChoice')->first();
+
+        if ($query == NULL) {
+            return BaseController::error(NULL, 'Data not found', 400);
         }
-        $response = [
-            "total_question" => $count,
-            "total_correct" => $sum,
-            "total_incorrect" => $count - $sum,
-            "total_score" => $sum / $count * 100,
-        ];
 
         try {
             DB::beginTransaction();
 
-            $input = new Answer();
-            $input->user_id = $userId;
-            $input->quiz_id = $id;
-            $input->answer = json_encode($data['answer']);
-            $input->score = $response['total_score'];
-            $input->save();
+            $answer = new Answer();
+            $answer->user_id = $userId;
+            $answer->quiz_id = $id;
+            $answer->save();
+            $answer->id;
 
+
+            foreach ($data->answer as $key => $value) {
+                $question = new AnswerQuestion();
+                $question->answer_id = $answer->id;
+                $question->title = $value['title'];
+                $question->save();
+                $question->id;
+
+                if ($question->title == $value['title']) {
+                    $total_question++;
+                }
+
+                foreach ($value['answer_choice'] as $key2 => $value2) {
+                    $choice = new AnswerChoice();
+                    $choice->answer_question_id = $question->id;
+                    $choice->choice_text = $value2['choice_text'];
+                    $choice->is_correct = $value2['is_correct'];
+                    $choice->is_selected = $value2['is_selected'];
+                    $choice->save();
+
+                    if ($choice->is_correct == 1 && $choice->is_selected == 1) {
+                        $count++;
+                    }
+                }
+            }
+
+            $sum = $count / $total_question * 100;
+
+            $score = Answer::find($answer->id);
+            $score->score = $sum;
+            $score->save();
             DB::commit();
         } catch (\Throwable $th) {
             DB::rollback();
             throw $th;
         }
+
+        $response = [
+            'score' => $sum,
+            'total_question' => $total_question,
+            'correct_answer' => $count,
+            'wrong_answer' => $total_question - $count
+        ];
+
 
         return BaseController::success($response, "Sukses menghitung Quiz", 200);
     }

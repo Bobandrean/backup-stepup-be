@@ -30,7 +30,6 @@ class NewsRepositoryImplement extends Eloquent implements NewsRepository
         $searchTitle = request()->query('searchTitle');
         $orderBy = request()->query('orderBy');
         $query = $this->model->with('files', 'newsSchedule')
-            ->where('hidden_flag', 0)
             ->where(function ($query) use ($searchTitle) {
                 $query->where('title', 'LIKE', '%' . $searchTitle . '%');
             })
@@ -43,6 +42,15 @@ class NewsRepositoryImplement extends Eloquent implements NewsRepository
             })
             ->orderBy('created_at', 'desc')
             ->paginate(10);
+
+        return BaseController::success($query, "Sukses mengambil data", 200);
+    }
+    public function getShowedNews()
+    {
+        $query = $this->model->with('files', 'newsSchedule')
+            ->where('hidden_flag', 1)
+            ->orderBy('created_at', 'desc')
+            ->paginate(6);
 
         return BaseController::success($query, "Sukses mengambil data", 200);
     }
@@ -186,11 +194,11 @@ class NewsRepositoryImplement extends Eloquent implements NewsRepository
         if (!$query) {
             return BaseController::error(null, "Data tidak ditemukan", 404);
         }
-        if ($query->hidden_flag == 0) {
+        if ($query->hidden_flag == 1) {
             return BaseController::error(null, "Data sudah tampil", 404);
         }
 
-        $query->hidden_flag = 0;
+        $query->hidden_flag = 1;
         $query->save();
 
         return BaseController::success($query, "Sukses update data", 200);
@@ -202,11 +210,11 @@ class NewsRepositoryImplement extends Eloquent implements NewsRepository
         if (!$query) {
             return BaseController::error(null, "Data tidak ditemukan", 404);
         }
-        if ($query->hidden_flag == 1) {
+        if ($query->hidden_flag == 0) {
             return BaseController::error(null, "Data sudah di hilangkan", 404);
         }
 
-        $query->hidden_flag = 1;
+        $query->hidden_flag = 0;
         $query->save();
 
         return BaseController::success($query, "Sukses menyembunyikan data", 200);

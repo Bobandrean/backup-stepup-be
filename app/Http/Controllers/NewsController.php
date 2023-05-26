@@ -69,5 +69,9 @@ class NewsController extends Controller
     {
         return $this->NewsRepository->updateNotification($request, $id);
     }
-    
+
+    public function getShowedNews()
+    {
+        return $this->NewsRepository->getShowedNews();
+    }
 }
