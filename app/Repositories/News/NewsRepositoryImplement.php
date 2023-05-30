@@ -8,6 +8,8 @@ use App\Models\Files;
 use App\Models\NewsSchedule;
 use App\Http\Controllers\BaseController;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 
 class NewsRepositoryImplement extends Eloquent implements NewsRepository
@@ -50,13 +52,40 @@ class NewsRepositoryImplement extends Eloquent implements NewsRepository
         $query = $this->model->with('files', 'newsSchedule')
             ->where('hidden_flag', 1)
             ->orderBy('created_at', 'desc')
-            ->paginate(6);
+            ->take(6) // Limit the result to 5 records
+            ->get();
 
         return BaseController::success($query, "Sukses mengambil data", 200);
     }
 
     public function createNews($request)
     {
+
+        $fileContents = 'This is a test file.';
+        $fileName = 'test-file.txt';
+
+        // Upload the file to S3
+        $filePath = Storage::disk('s3')->put($fileName, $fileContents);
+
+        // Check if the file exists in S3
+        $fileExists = Storage::disk('s3')->exists($filePath);
+
+        return response()->json([
+            'file_exists' => $fileExists,
+            'file_path' => $filePath,
+        ]);
+        $imageFile = $request->file('image');
+
+        $filename = "image/" . '.' . Str::random(40) . '.' . $imageFile->getClientOriginalExtension();
+
+        $imagePath = Storage::disk('s3')->putFileAs('images', $imageFile, $filename, 'public');
+
+
+        return response()->json([
+            'message' => 'Image uploaded successfully.',
+            'image_path' => $imagePath,
+        ]);
+
         DB::beginTransaction();
         try {
             $input = new News();

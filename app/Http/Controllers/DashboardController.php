@@ -26,6 +26,6 @@ class DashboardController extends Controller
 
     public function indexQuiz()
     {
-        return $this->QuizRepository->getAllQuiz();
+        return $this->QuizRepository->getShowedQuiz();
     }
 }

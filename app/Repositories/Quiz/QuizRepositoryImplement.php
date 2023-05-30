@@ -41,6 +41,22 @@ class QuizRepositoryImplement extends Eloquent implements QuizRepository
         return BaseController::success($query, "Sukses mengambil data", 200);
     }
 
+    public function getShowedQuiz()
+    {
+        $now = Carbon::now()->format('Y-m-d');
+
+        $query = $this->model->where('start_date', '<=', $now)
+            ->where('end_date', '>=', $now)
+            ->take(6) // Limit the result to 5 records
+            ->get();
+
+        if ($query == NULL) {
+            return BaseController::error(NULL, 'Data not found', 400);
+        }
+
+        return BaseController::success($query, "Sukses mengambil data", 200);
+    }
+
     public function createQuiz($request)
     {
 

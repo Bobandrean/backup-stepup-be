@@ -10,6 +10,7 @@ interface QuizRepository extends Repository
     // Write something awesome :)
 
     public function getAllQuiz();
+    public function getShowedQuiz();
     public function createQuiz($request);
     public function updateQuiz($request, $id);
     public function getQuizById($id);
