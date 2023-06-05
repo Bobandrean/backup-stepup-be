@@ -13,7 +13,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\Quiz;
 use Carbon\Carbon;
+use App\Models\Score;
 use Faker\Provider\Base;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\QuizResultExport;
+
 
 class QuizRepositoryImplement extends Eloquent implements QuizRepository
 {
@@ -37,7 +41,6 @@ class QuizRepositoryImplement extends Eloquent implements QuizRepository
             return BaseController::error(NULL, 'Data not found', 400);
         }
 
-
         return BaseController::success($query, "Sukses mengambil data", 200);
     }
 
@@ -54,14 +57,21 @@ class QuizRepositoryImplement extends Eloquent implements QuizRepository
             return BaseController::error(NULL, 'Data not found', 400);
         }
 
-        return BaseController::success($query, "Sukses mengambil data", 200);
+        $user = auth()->user(); // Assuming you have user authentication in place
+
+        // Exclude quizzes already taken by the user
+        $quizIdsTaken = $user->answers()->pluck('quiz_id')->toArray();
+        $filteredQuery = $query->whereNotIn('id', $quizIdsTaken);
+
+        if ($filteredQuery->isEmpty()) {
+            return BaseController::success(null, 'No available quizzes', 200);
+        }
+
+        return BaseController::success($filteredQuery, "Sukses mengambil data", 200);
     }
 
     public function createQuiz($request)
     {
-
-
-
         $questionsData = $request->questions;
 
 
@@ -92,6 +102,8 @@ class QuizRepositoryImplement extends Eloquent implements QuizRepository
                     $choice->save();
                 }
             }
+
+
 
             DB::commit();
         } catch (\Throwable $th) {
@@ -142,6 +154,7 @@ class QuizRepositoryImplement extends Eloquent implements QuizRepository
                 $choice->save();
             }
         }
+
 
         return BaseController::success(NULL, "Sukses mengubah data", 200);
     }
@@ -232,24 +245,58 @@ class QuizRepositoryImplement extends Eloquent implements QuizRepository
 
             $sum = $count / $total_question * 100;
 
-            $score = Answer::find($answer->id);
-            $score->score = $sum;
-            $score->save();
+
+            $response = [
+                'score' => $sum,
+                'total_question' => $total_question,
+                'correct_answer' => $count,
+                'wrong_answer' => $total_question - $count
+            ];
+
+            $scoring = new Score();
+            $scoring->quiz_id = $id;
+            $scoring->user_id = $userId;
+            $scoring->score = $response['score'];
+            $scoring->total_question = $response['total_question'];
+            $scoring->correct_answer = $response['correct_answer'];
+            $scoring->wrong_answer = $response['wrong_answer'];
+            $scoring->save();
+
             DB::commit();
         } catch (\Throwable $th) {
             DB::rollback();
             throw $th;
         }
 
-        $response = [
-            'score' => $sum,
-            'total_question' => $total_question,
-            'correct_answer' => $count,
-            'wrong_answer' => $total_question - $count
-        ];
-
-
         return BaseController::success($response, "Sukses menghitung Quiz", 200);
+    }
+
+    public function getQuizResult($id)
+    {
+        $query = Score::with('user', 'quiz')
+            ->where('quiz_id', $id)
+            ->get();
+
+        if ($query->isEmpty()) {
+            return BaseController::error(NULL, 'Data not found', 400);
+        }
+
+        $data = [];
+
+        foreach ($query as $score) {
+            $data[] = [
+                'ID' => $score->id,
+                'Username' => $score->user->name,
+                'Module Name' => $score->quiz->module_name,
+                'Total Questions' => $score->total_question,
+                'Correct Answers' => $score->correct_answer,
+                'Wrong Answers' => $score->wrong_answer,
+                'Created At' => $score->created_at,
+                'Updated At' => $score->updated_at
+            ];
+        }
+
+        return Excel::download(new QuizResultExport($data), 'quiz_results.xlsx');
     }
 
     // Write something awesome :)

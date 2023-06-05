@@ -10,6 +10,9 @@ use App\Http\Controllers\BaseController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Hash;
+use Carbon\Carbon;
 
 
 class NewsRepositoryImplement extends Eloquent implements NewsRepository
@@ -60,31 +63,20 @@ class NewsRepositoryImplement extends Eloquent implements NewsRepository
 
     public function createNews($request)
     {
+        // On Proggress Fixing**
+        // $file = $request->file('image');
 
-        $fileContents = 'This is a test file.';
-        $fileName = 'test-file.txt';
+        // // Generate a unique file name
+        // $fileName = uniqid() . '.' . $file->getClientOriginalExtension();
 
-        // Upload the file to S3
-        $filePath = Storage::disk('s3')->put($fileName, $fileContents);
+        // // Upload the file to the S3 bucket and make it publicly accessible
+        // Storage::disk('s3')->put($fileName, file_get_contents($file), 'public');
 
-        // Check if the file exists in S3
-        $fileExists = Storage::disk('s3')->exists($filePath);
+        // // Generate the publicly accessible URL
+        // $fileUrl = Storage::disk('s3')->url($fileName);
 
-        return response()->json([
-            'file_exists' => $fileExists,
-            'file_path' => $filePath,
-        ]);
-        $imageFile = $request->file('image');
-
-        $filename = "image/" . '.' . Str::random(40) . '.' . $imageFile->getClientOriginalExtension();
-
-        $imagePath = Storage::disk('s3')->putFileAs('images', $imageFile, $filename, 'public');
-
-
-        return response()->json([
-            'message' => 'Image uploaded successfully.',
-            'image_path' => $imagePath,
-        ]);
+        // // Return the URL or perform additional actions
+        // return $fileUrl;
 
         DB::beginTransaction();
         try {

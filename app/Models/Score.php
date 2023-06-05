@@ -6,19 +6,21 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\Quiz;
-use App\Models\AnswerQuestion;
 
-
-class Answer extends Model
+class Score extends Model
 {
     use HasFactory;
 
-    public $table = 'answers';
+
+    public $table = 'score';
 
     protected $fillable = [
         'id',
-        'user_id',
-        'quiz_id',
+        'id_quiz',
+        'id_user',
+        'total_question',
+        'correct_answer',
+        'wrong_answer',
         'created_at',
         'updated_at',
         'deleted_at'
@@ -26,16 +28,11 @@ class Answer extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
     public function quiz()
     {
-        return $this->belongsTo(Quiz::class);
-    }
-
-    public function answerQuestion()
-    {
-        return $this->hasMany(AnswerQuestion::class);
+        return $this->belongsTo(Quiz::class, 'quiz_id', 'id');
     }
 }

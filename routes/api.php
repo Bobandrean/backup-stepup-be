@@ -54,6 +54,7 @@ Route::prefix('v1')->group(function () {
             Route::delete('/delete/{id}', [QuizController::class, 'delete']);
             Route::post('/answer/{id}', [QuizController::class, 'answer']);
             Route::get('/answer/detail/{id}', [QuizController::class, 'answerDetail']);
+            Route::get('/result/{id}', [QuizController::class, 'quizResult']);
         });
 
 

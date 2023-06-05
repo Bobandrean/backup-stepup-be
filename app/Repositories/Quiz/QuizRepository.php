@@ -17,4 +17,5 @@ interface QuizRepository extends Repository
     public function deleteQuiz($id);
     public function answerQuiz($request, $id);
     public function getAnswerById($id);
+    public function getQuizResult($id);
 }
