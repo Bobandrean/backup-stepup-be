@@ -23,7 +23,7 @@ class NewsSeeder extends Seeder
             'slug' => 'example-news-1',
             'hidden_flag' => 0,
             'short_content' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-            'image' => 'example.jpg',
+            'image' => 'https://cms.hugofox.com//resources/images/a0fea022-8ec7-4a37-b4e7-214846e7656f.jpg',
         ]);
 
         News::create([
@@ -32,7 +32,7 @@ class NewsSeeder extends Seeder
             'slug' => 'example-news-2',
             'hidden_flag' => 0,
             'short_content' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-            'image' => 'example.jpg',
+            'image' => 'https://cms.hugofox.com//resources/images/a0fea022-8ec7-4a37-b4e7-214846e7656f.jpg',
         ]);
     }
 }

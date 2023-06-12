@@ -28,20 +28,17 @@ class AuthRepositoryImplement extends Eloquent implements AuthRepository
     public function loginFunction($request)
     {
         $credentials = [
-            'email' => $request->input('email'),
-            'password' => $request->input('password')
+            'email' => $request->input('email')
         ];
 
         // Check if login is successful with email
         if (!Auth::attempt($credentials)) {
             // Attempt login with username
             $user = $this->model::where('username', $request->input('email'))
-                ->where('active', '=', '1')
                 ->first();
-
-            if (!$user || !Hash::check($request->input('password'), $user->password)) {
-                return BaseController::error(NULL, 'UnAuthorized', 400);
-            }
+            // if (!$user || !Hash::check($request->input('password'), $user->password)) {
+            //     return BaseController::error(NULL, 'UnAuthorized', 400);
+            // }
         }
 
         try {

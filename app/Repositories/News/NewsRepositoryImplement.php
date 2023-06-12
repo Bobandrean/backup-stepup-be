@@ -63,20 +63,13 @@ class NewsRepositoryImplement extends Eloquent implements NewsRepository
 
     public function createNews($request)
     {
-        // On Proggress Fixing**
-        // $file = $request->file('image');
+        $bucket = env('AWS_BUCKET');
+        $key = env('AWS_ACCESS_KEY_ID');
 
-        // // Generate a unique file name
-        // $fileName = uniqid() . '.' . $file->getClientOriginalExtension();
-
-        // // Upload the file to the S3 bucket and make it publicly accessible
-        // Storage::disk('s3')->put($fileName, file_get_contents($file), 'public');
-
-        // // Generate the publicly accessible URL
-        // $fileUrl = Storage::disk('s3')->url($fileName);
-
-        // // Return the URL or perform additional actions
-        // return $fileUrl;
+        $stream = fopen("s3://{$bucket}/{$key}", 'w');
+        return $stream;
+        fwrite($stream, 'Hello!');
+        fclose($stream);
 
         DB::beginTransaction();
         try {

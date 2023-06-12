@@ -72,6 +72,8 @@ class QuizRepositoryImplement extends Eloquent implements QuizRepository
 
     public function createQuiz($request)
     {
+
+
         $questionsData = $request->questions;
 
 
@@ -194,13 +196,12 @@ class QuizRepositoryImplement extends Eloquent implements QuizRepository
 
     public function answerQuiz($request, $id)
     {
+        return $id;
         $userId = Auth::user()->id;
         $data = $request;
         $total_question = 0;
         $count = 0;
         $sum = 0;
-
-
 
         $query = Answer::with('quiz', 'user', 'answerQuestion.answerChoice')->first();
 
@@ -254,8 +255,8 @@ class QuizRepositoryImplement extends Eloquent implements QuizRepository
             ];
 
             $scoring = new Score();
-            $scoring->quiz_id = $id;
-            $scoring->user_id = $userId;
+            $scoring->id_quiz = $id;
+            $scoring->id_user = $userId;
             $scoring->score = $response['score'];
             $scoring->total_question = $response['total_question'];
             $scoring->correct_answer = $response['correct_answer'];
@@ -296,6 +297,7 @@ class QuizRepositoryImplement extends Eloquent implements QuizRepository
             ];
         }
 
+        return $data;
         return Excel::download(new QuizResultExport($data), 'quiz_results.xlsx');
     }
 
