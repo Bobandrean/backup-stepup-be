@@ -63,13 +63,15 @@ class NewsRepositoryImplement extends Eloquent implements NewsRepository
 
     public function createNews($request)
     {
-        $bucket = env('AWS_BUCKET');
-        $key = env('AWS_ACCESS_KEY_ID');
+        $env = env('ENV_STORAGE_LOCAL');
 
-        $stream = fopen("s3://{$bucket}/{$key}", 'w');
-        return $stream;
-        fwrite($stream, 'Hello!');
-        fclose($stream);
+        if ($request->hasFile('image')) {
+            $imageName = time() . '.' . $request->image->extension();
+            Storage::disk('public')->putFileAs('images', $request->file('image'), $imageName);
+
+            $url = $env . "storage/images/" . $imageName;
+        }
+
 
         DB::beginTransaction();
         try {
@@ -79,7 +81,7 @@ class NewsRepositoryImplement extends Eloquent implements NewsRepository
             $input->slug = $request->slug;
             $input->short_content = $request->short_content;
             $input->hidden_flag = 0;
-            $input->image = "https://upload.wikimedia.org/wikipedia/commons/1/11/Test-Logo.svg";
+            $input->image = $url ? $url : 'https://caps.zone/assets/img/merchandise/test1.png';
             $input->save();
             $input->id;
 
@@ -87,8 +89,9 @@ class NewsRepositoryImplement extends Eloquent implements NewsRepository
                 foreach ($request->files as $key => $filesArray) {
                     foreach ($filesArray as $file) {
                         if (is_array($file)) {
-                            $pathFile = $file['file']->getPath();
-                            $fileName = $file['file']->getClientOriginalName();
+                            $fileName = time() . '.' . $file['file']->getClientOriginalName();
+                            Storage::disk('public')->putFileAs('documents', $file['file'], $fileName);
+                            $pathFile = $env . "storage/documents/" . $fileName;
                             $fileExtension = $file['file']->getClientOriginalExtension();
                         } else {
                             $pathFile = $file->getPath();
@@ -119,12 +122,28 @@ class NewsRepositoryImplement extends Eloquent implements NewsRepository
 
     public function updateNews($request, $id)
     {
+        $env = env('ENV_STORAGE_LOCAL');
 
         $query = $this->model::with('files')->find($id);
+
+
+        // Extract the file path from the URL
+
+
         if (!$query) {
             return BaseController::error(null, "Data tidak ditemukan", 404);
         }
 
+        if ($request->has('image')) {
+            $url = $query->image;
+            $filePath = str_replace($env . 'storage/', '', $url);
+
+            if (Storage::disk('public')->delete($filePath))
+                $imageName = time() . '.' . $request->image->extension();
+            Storage::disk('public')->putFileAs('images', $request->file('image'), $imageName);
+
+            $url = $env . "storage/images/" . $imageName;
+        }
         DB::beginTransaction();
 
         try {
@@ -132,7 +151,7 @@ class NewsRepositoryImplement extends Eloquent implements NewsRepository
             $query->content = $request->content;
             $query->slug = $request->slug;
             $query->short_content = $request->short_content;
-            $query->image = "https://upload.wikimedia.org/wikipedia/commons/1/11/Test-Logo.svg";
+            $query->image = $url ? $url : "https://upload.wikimedia.org/wikipedia/commons/1/11/Test-Logo.svg";
             $query->save();
 
             if ($request->has('files')) {
@@ -146,8 +165,9 @@ class NewsRepositoryImplement extends Eloquent implements NewsRepository
                 foreach ($request->files as $key => $filesArray) {
                     foreach ($filesArray as $file) {
                         if (is_array($file)) {
-                            $pathFile = $file['file']->getPath();
-                            $fileName = $file['file']->getClientOriginalName();
+                            $fileName = time() . '.' . $file['file']->getClientOriginalName();
+                            Storage::disk('public')->putFileAs('documents', $file['file'], $fileName);
+                            $pathFile = $env . "storage/documents/" . $fileName;
                             $fileExtension = $file['file']->getClientOriginalExtension();
                         } else {
                             $pathFile = $file->getPath();
